@@ -41,6 +41,56 @@
 
 ## Installation
 
+### Homebrew (macOS/Linux)
+
+```bash
+brew install huseyinbabal/tap/taws
+```
+
+### Download Pre-built Binaries
+
+Download the latest release from the [Releases page](https://github.com/huseyinbabal/taws/releases/latest).
+
+| Platform | Architecture | Download |
+|----------|--------------|----------|
+| **macOS** | Apple Silicon (M1/M2/M3) | `taws-aarch64-apple-darwin.tar.gz` |
+| **macOS** | Intel | `taws-x86_64-apple-darwin.tar.gz` |
+| **Linux** | x86_64 | `taws-x86_64-unknown-linux-gnu.tar.gz` |
+| **Linux** | ARM64 | `taws-aarch64-unknown-linux-gnu.tar.gz` |
+| **Windows** | x86_64 | `taws-x86_64-pc-windows-msvc.zip` |
+
+#### Quick Install (macOS/Linux)
+
+```bash
+# macOS Apple Silicon
+curl -sL https://github.com/huseyinbabal/taws/releases/latest/download/taws-aarch64-apple-darwin.tar.gz | tar xz
+sudo mv taws /usr/local/bin/
+
+# macOS Intel
+curl -sL https://github.com/huseyinbabal/taws/releases/latest/download/taws-x86_64-apple-darwin.tar.gz | tar xz
+sudo mv taws /usr/local/bin/
+
+# Linux x86_64
+curl -sL https://github.com/huseyinbabal/taws/releases/latest/download/taws-x86_64-unknown-linux-gnu.tar.gz | tar xz
+sudo mv taws /usr/local/bin/
+
+# Linux ARM64
+curl -sL https://github.com/huseyinbabal/taws/releases/latest/download/taws-aarch64-unknown-linux-gnu.tar.gz | tar xz
+sudo mv taws /usr/local/bin/
+```
+
+#### Windows
+
+1. Download `taws-x86_64-pc-windows-msvc.zip` from the [Releases page](https://github.com/huseyinbabal/taws/releases/latest)
+2. Extract the zip file
+3. Add the extracted folder to your PATH, or move `taws.exe` to a directory in your PATH
+
+### Using Cargo
+
+```bash
+cargo install taws
+```
+
 ### From Source
 
 taws is built with Rust. Make sure you have Rust 1.70+ installed.
@@ -53,18 +103,6 @@ cd taws
 # Build and run
 cargo build --release
 ./target/release/taws
-```
-
-### Using Cargo
-
-```bash
-cargo install taws
-```
-
-### Homebrew (macOS/Linux)
-
-```bash
-brew install huseyinbabal/tap/taws
 ```
 
 ---
