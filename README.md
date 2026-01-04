@@ -159,48 +159,7 @@ taws supports **30 core AWS services** covering 95%+ of typical AWS usage:
 | **DevOps** | CodePipeline, CodeBuild |
 | **Analytics** | Athena |
 
----
-
-## Architecture
-
-taws follows a data-driven architecture where AWS resource definitions are stored as JSON configuration files. This makes it easy to add new resource types without writing new code.
-
-```
-src/
-├── resources/          # JSON resource definitions (one per service)
-│   ├── ec2.json
-│   ├── lambda.json
-│   ├── s3.json
-│   └── ...
-├── resource/
-│   ├── registry.rs     # Resource registry and loading
-│   ├── fetcher.rs      # Generic resource fetcher
-│   └── sdk_dispatch.rs # HTTP-based AWS API calls
-├── aws/
-│   ├── client.rs       # AWS HTTP client management
-│   ├── credentials.rs  # Credential loading (profiles, env vars)
-│   ├── http.rs         # Lightweight HTTP client with SigV4 signing
-│   └── profiles.rs     # AWS profile handling
-└── ui/
-    ├── table.rs        # Resource table view
-    ├── details.rs      # Resource details view
-    └── ...
-```
-
-### Lightweight Design
-
-taws uses a custom lightweight HTTP client with AWS SigV4 signing instead of the full AWS SDK. This results in:
-- **Fast builds** - ~100 dependencies vs ~500+ with full SDK
-- **Small binary** - ~5MB release binary
-- **Quick compilation** - Seconds instead of minutes
-
-### Adding a New Resource Type
-
-1. Add a JSON definition in `src/resources/<service>.json`
-2. Add the service definition to `src/aws/http.rs`
-3. Add the HTTP dispatch handler to `src/resource/sdk_dispatch.rs`
-
-No other code changes required!
+> **Missing a service?** [Start a discussion](https://github.com/huseyinbabal/taws/discussions/new?category=ideas) to propose adding it!
 
 ---
 
@@ -233,29 +192,9 @@ taws looks for AWS credentials in the standard locations:
 
 ## Contributing
 
-Contributions are welcome! Please feel free to submit a Pull Request.
+Contributions are welcome! Please see our [Contributing Guide](CONTRIBUTING.md) for details.
 
-1. Fork the repository
-2. Create your feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add some amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
-
-### Development
-
-```bash
-# Run in development mode
-cargo run
-
-# Run tests
-cargo test
-
-# Check formatting
-cargo fmt --check
-
-# Run linter
-cargo clippy
-```
+**Important:** Before adding a new AWS service, please [start a discussion](https://github.com/huseyinbabal/taws/discussions/new?category=ideas) first.
 
 ---
 
