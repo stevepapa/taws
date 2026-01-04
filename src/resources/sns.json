@@ -1,0 +1,21 @@
+{
+  "resources": {
+    "sns-topics": {
+      "display_name": "SNS Topics",
+      "service": "sns",
+      "sdk_method": "list_topics",
+      "sdk_method_params": {},
+      "response_path": "topics",
+      "id_field": "TopicArn",
+      "name_field": "TopicArn",
+      "is_global": false,
+      "columns": [
+        { "header": "TOPIC ARN", "json_path": "TopicArn", "width": 80 }
+      ],
+      "sub_resources": [],
+      "actions": [
+        { "key": "D", "display_name": "Delete Topic", "sdk_method": "delete_topic", "needs_confirm": true }
+      ]
+    }
+  }
+}

@@ -1,0 +1,22 @@
+{
+  "resources": {
+    "sqs-queues": {
+      "display_name": "SQS Queues",
+      "service": "sqs",
+      "sdk_method": "list_queues",
+      "sdk_method_params": {},
+      "response_path": "queue_urls",
+      "id_field": "QueueUrl",
+      "name_field": "QueueUrl",
+      "is_global": false,
+      "columns": [
+        { "header": "QUEUE URL", "json_path": "QueueUrl", "width": 80 }
+      ],
+      "sub_resources": [],
+      "actions": [
+        { "key": "P", "display_name": "Purge Queue", "sdk_method": "purge_queue", "needs_confirm": true },
+        { "key": "D", "display_name": "Delete Queue", "sdk_method": "delete_queue", "needs_confirm": true }
+      ]
+    }
+  }
+}

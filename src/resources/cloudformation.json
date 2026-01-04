@@ -1,0 +1,24 @@
+{
+  "resources": {
+    "cloudformation-stacks": {
+      "display_name": "CloudFormation Stacks",
+      "service": "cloudformation",
+      "sdk_method": "describe_stacks",
+      "sdk_method_params": {},
+      "response_path": "stacks",
+      "id_field": "StackName",
+      "name_field": "StackName",
+      "is_global": false,
+      "columns": [
+        { "header": "STACK NAME", "json_path": "StackName", "width": 35 },
+        { "header": "STATUS", "json_path": "StackStatus", "width": 25, "color_map": "state" },
+        { "header": "CREATED", "json_path": "CreationTime", "width": 25 },
+        { "header": "UPDATED", "json_path": "LastUpdatedTime", "width": 25 }
+      ],
+      "sub_resources": [],
+      "actions": [
+        { "key": "D", "display_name": "Delete Stack", "sdk_method": "delete_stack", "needs_confirm": true }
+      ]
+    }
+  }
+}

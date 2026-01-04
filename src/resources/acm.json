@@ -1,0 +1,22 @@
+{
+  "resources": {
+    "acm-certificates": {
+      "display_name": "ACM Certificates",
+      "service": "acm",
+      "sdk_method": "list_certificates",
+      "sdk_method_params": {},
+      "response_path": "certificates",
+      "id_field": "CertificateArn",
+      "name_field": "DomainName",
+      "is_global": false,
+      "columns": [
+        { "header": "DOMAIN NAME", "json_path": "DomainName", "width": 40 },
+        { "header": "STATUS", "json_path": "Status", "width": 15, "color_map": "state" },
+        { "header": "TYPE", "json_path": "Type", "width": 15 },
+        { "header": "IN USE", "json_path": "InUse", "width": 8 }
+      ],
+      "sub_resources": [],
+      "actions": []
+    }
+  }
+}

@@ -1,0 +1,26 @@
+{
+  "resources": {
+    "autoscaling-groups": {
+      "display_name": "Auto Scaling Groups",
+      "service": "autoscaling",
+      "sdk_method": "describe_auto_scaling_groups",
+      "sdk_method_params": {},
+      "response_path": "auto_scaling_groups",
+      "id_field": "AutoScalingGroupName",
+      "name_field": "AutoScalingGroupName",
+      "is_global": false,
+      "columns": [
+        { "header": "GROUP NAME", "json_path": "AutoScalingGroupName", "width": 35 },
+        { "header": "DESIRED", "json_path": "DesiredCapacity", "width": 10 },
+        { "header": "MIN", "json_path": "MinSize", "width": 6 },
+        { "header": "MAX", "json_path": "MaxSize", "width": 6 },
+        { "header": "INSTANCES", "json_path": "InstanceCount", "width": 12 },
+        { "header": "AZ", "json_path": "AvailabilityZones", "width": 20 }
+      ],
+      "sub_resources": [],
+      "actions": [
+        { "key": "D", "display_name": "Delete Group", "sdk_method": "delete_auto_scaling_group", "needs_confirm": true }
+      ]
+    }
+  }
+}

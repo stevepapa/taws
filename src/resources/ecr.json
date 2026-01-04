@@ -1,0 +1,21 @@
+{
+  "resources": {
+    "ecr-repositories": {
+      "display_name": "ECR Repositories",
+      "service": "ecr",
+      "sdk_method": "describe_repositories",
+      "sdk_method_params": {},
+      "response_path": "repositories",
+      "id_field": "repositoryArn",
+      "name_field": "repositoryName",
+      "is_global": false,
+      "columns": [
+        { "header": "REPOSITORY NAME", "json_path": "repositoryName", "width": 40 },
+        { "header": "URI", "json_path": "repositoryUri", "width": 60 },
+        { "header": "CREATED", "json_path": "createdAt", "width": 25 }
+      ],
+      "sub_resources": [],
+      "actions": []
+    }
+  }
+}

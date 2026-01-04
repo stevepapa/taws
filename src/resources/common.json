@@ -1,0 +1,20 @@
+{
+  "color_maps": {
+    "state": [
+      { "value": "running", "color": [0, 255, 0] },
+      { "value": "available", "color": [0, 255, 0] },
+      { "value": "active", "color": [0, 255, 0] },
+      { "value": "stopped", "color": [255, 0, 0] },
+      { "value": "terminated", "color": [255, 0, 0] },
+      { "value": "pending", "color": [255, 255, 0] },
+      { "value": "stopping", "color": [255, 255, 0] }
+    ],
+    "bool": [
+      { "value": "true", "color": [0, 255, 255] },
+      { "value": "Yes", "color": [0, 255, 255] },
+      { "value": "false", "color": [128, 128, 128] },
+      { "value": "No", "color": [128, 128, 128] }
+    ]
+  },
+  "resources": {}
+}

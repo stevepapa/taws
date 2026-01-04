@@ -1,0 +1,22 @@
+{
+  "resources": {
+    "ssm-parameters": {
+      "display_name": "SSM Parameters",
+      "service": "ssm",
+      "sdk_method": "describe_parameters",
+      "sdk_method_params": {},
+      "response_path": "parameters",
+      "id_field": "Name",
+      "name_field": "Name",
+      "is_global": false,
+      "columns": [
+        { "header": "PARAMETER NAME", "json_path": "Name", "width": 45 },
+        { "header": "TYPE", "json_path": "Type", "width": 15 },
+        { "header": "TIER", "json_path": "Tier", "width": 12 },
+        { "header": "LAST MODIFIED", "json_path": "LastModifiedDate", "width": 25 }
+      ],
+      "sub_resources": [],
+      "actions": []
+    }
+  }
+}

@@ -1,0 +1,66 @@
+{
+  "resources": {
+    "vpc": {
+      "display_name": "VPCs",
+      "service": "ec2",
+      "sdk_method": "describe_vpcs",
+      "sdk_method_params": {},
+      "response_path": "vpcs",
+      "id_field": "VpcId",
+      "name_field": "Tags.Name",
+      "is_global": false,
+      "columns": [
+        { "header": "NAME", "json_path": "Tags.Name", "width": 20 },
+        { "header": "VPC ID", "json_path": "VpcId", "width": 24 },
+        { "header": "STATE", "json_path": "State", "width": 12, "color_map": "state" },
+        { "header": "CIDR", "json_path": "CidrBlock", "width": 18 },
+        { "header": "DEFAULT", "json_path": "IsDefault", "width": 10, "color_map": "bool" },
+        { "header": "TENANCY", "json_path": "InstanceTenancy", "width": 12 }
+      ],
+      "sub_resources": [
+        { "shortcut": "s", "display_name": "Subnets", "resource_key": "subnets", "parent_id_field": "VpcId", "filter_param": "vpc_ids" },
+        { "shortcut": "g", "display_name": "Security Groups", "resource_key": "security-groups", "parent_id_field": "VpcId", "filter_param": "vpc_ids" }
+      ],
+      "actions": []
+    },
+    "subnets": {
+      "display_name": "Subnets",
+      "service": "ec2",
+      "sdk_method": "describe_subnets",
+      "sdk_method_params": {},
+      "response_path": "subnets",
+      "id_field": "SubnetId",
+      "name_field": "Tags.Name",
+      "is_global": false,
+      "columns": [
+        { "header": "NAME", "json_path": "Tags.Name", "width": 20 },
+        { "header": "SUBNET ID", "json_path": "SubnetId", "width": 26 },
+        { "header": "STATE", "json_path": "State", "width": 12, "color_map": "state" },
+        { "header": "VPC ID", "json_path": "VpcId", "width": 24 },
+        { "header": "CIDR", "json_path": "CidrBlock", "width": 18 },
+        { "header": "AZ", "json_path": "AvailabilityZone", "width": 14 },
+        { "header": "AVAILABLE IPs", "json_path": "AvailableIpAddressCount", "width": 14 }
+      ],
+      "sub_resources": [],
+      "actions": []
+    },
+    "security-groups": {
+      "display_name": "Security Groups",
+      "service": "ec2",
+      "sdk_method": "describe_security_groups",
+      "sdk_method_params": {},
+      "response_path": "security_groups",
+      "id_field": "GroupId",
+      "name_field": "GroupName",
+      "is_global": false,
+      "columns": [
+        { "header": "NAME", "json_path": "GroupName", "width": 25 },
+        { "header": "GROUP ID", "json_path": "GroupId", "width": 24 },
+        { "header": "VPC ID", "json_path": "VpcId", "width": 24 },
+        { "header": "DESCRIPTION", "json_path": "Description", "width": 30 }
+      ],
+      "sub_resources": [],
+      "actions": []
+    }
+  }
+}

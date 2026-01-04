@@ -1,0 +1,38 @@
+{
+  "resources": {
+    "eventbridge-rules": {
+      "display_name": "EventBridge Rules",
+      "service": "eventbridge",
+      "sdk_method": "list_rules",
+      "sdk_method_params": {},
+      "response_path": "rules",
+      "id_field": "Arn",
+      "name_field": "Name",
+      "is_global": false,
+      "columns": [
+        { "header": "RULE NAME", "json_path": "Name", "width": 35 },
+        { "header": "STATE", "json_path": "State", "width": 12, "color_map": "state" },
+        { "header": "EVENT BUS", "json_path": "EventBusName", "width": 20 },
+        { "header": "DESCRIPTION", "json_path": "Description", "width": 30 }
+      ],
+      "sub_resources": [],
+      "actions": []
+    },
+    "eventbridge-buses": {
+      "display_name": "EventBridge Event Buses",
+      "service": "eventbridge",
+      "sdk_method": "list_event_buses",
+      "sdk_method_params": {},
+      "response_path": "event_buses",
+      "id_field": "Arn",
+      "name_field": "Name",
+      "is_global": false,
+      "columns": [
+        { "header": "EVENT BUS NAME", "json_path": "Name", "width": 40 },
+        { "header": "ARN", "json_path": "Arn", "width": 60 }
+      ],
+      "sub_resources": [],
+      "actions": []
+    }
+  }
+}

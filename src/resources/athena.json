@@ -1,0 +1,21 @@
+{
+  "resources": {
+    "athena-workgroups": {
+      "display_name": "Athena Workgroups",
+      "service": "athena",
+      "sdk_method": "list_work_groups",
+      "sdk_method_params": {},
+      "response_path": "work_groups",
+      "id_field": "Name",
+      "name_field": "Name",
+      "is_global": false,
+      "columns": [
+        { "header": "WORKGROUP NAME", "json_path": "Name", "width": 35 },
+        { "header": "STATE", "json_path": "State", "width": 15, "color_map": "state" },
+        { "header": "DESCRIPTION", "json_path": "Description", "width": 40 }
+      ],
+      "sub_resources": [],
+      "actions": []
+    }
+  }
+}

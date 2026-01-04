@@ -1,0 +1,22 @@
+{
+  "resources": {
+    "s3-buckets": {
+      "display_name": "S3 Buckets",
+      "service": "s3",
+      "sdk_method": "list_buckets",
+      "sdk_method_params": {},
+      "response_path": "buckets",
+      "id_field": "Name",
+      "name_field": "Name",
+      "is_global": true,
+      "columns": [
+        { "header": "BUCKET NAME", "json_path": "Name", "width": 40 },
+        { "header": "CREATED", "json_path": "CreationDate", "width": 25 }
+      ],
+      "sub_resources": [],
+      "actions": [
+        { "key": "D", "display_name": "Delete Bucket", "sdk_method": "delete_bucket", "needs_confirm": true }
+      ]
+    }
+  }
+}

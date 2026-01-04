@@ -1,0 +1,23 @@
+{
+  "resources": {
+    "elasticache-clusters": {
+      "display_name": "ElastiCache Clusters",
+      "service": "elasticache",
+      "sdk_method": "describe_cache_clusters",
+      "sdk_method_params": {},
+      "response_path": "cache_clusters",
+      "id_field": "CacheClusterId",
+      "name_field": "CacheClusterId",
+      "is_global": false,
+      "columns": [
+        { "header": "CLUSTER ID", "json_path": "CacheClusterId", "width": 30 },
+        { "header": "STATUS", "json_path": "CacheClusterStatus", "width": 15, "color_map": "state" },
+        { "header": "ENGINE", "json_path": "Engine", "width": 12 },
+        { "header": "NODE TYPE", "json_path": "CacheNodeType", "width": 18 },
+        { "header": "NODES", "json_path": "NumCacheNodes", "width": 8 }
+      ],
+      "sub_resources": [],
+      "actions": []
+    }
+  }
+}

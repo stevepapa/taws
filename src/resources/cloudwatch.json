@@ -1,0 +1,22 @@
+{
+  "resources": {
+    "cloudwatch-log-groups": {
+      "display_name": "CloudWatch Log Groups",
+      "service": "cloudwatchlogs",
+      "sdk_method": "describe_log_groups",
+      "sdk_method_params": {},
+      "response_path": "log_groups",
+      "id_field": "logGroupName",
+      "name_field": "logGroupName",
+      "is_global": false,
+      "columns": [
+        { "header": "LOG GROUP NAME", "json_path": "logGroupName", "width": 50 },
+        { "header": "STORED BYTES", "json_path": "storedBytes", "width": 15 },
+        { "header": "RETENTION (DAYS)", "json_path": "retentionInDays", "width": 18 },
+        { "header": "CREATED", "json_path": "creationTime", "width": 25 }
+      ],
+      "sub_resources": [],
+      "actions": []
+    }
+  }
+}

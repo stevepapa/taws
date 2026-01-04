@@ -1,0 +1,29 @@
+{
+  "resources": {
+    "ec2-instances": {
+      "display_name": "EC2 Instances",
+      "service": "ec2",
+      "sdk_method": "describe_instances",
+      "sdk_method_params": {},
+      "response_path": "reservations",
+      "id_field": "InstanceId",
+      "name_field": "Tags.Name",
+      "is_global": false,
+      "columns": [
+        { "header": "NAME", "json_path": "Tags.Name", "width": 20 },
+        { "header": "INSTANCE ID", "json_path": "InstanceId", "width": 21 },
+        { "header": "STATE", "json_path": "State", "width": 12, "color_map": "state" },
+        { "header": "TYPE", "json_path": "InstanceType", "width": 12 },
+        { "header": "AZ", "json_path": "AvailabilityZone", "width": 14 },
+        { "header": "PUBLIC IP", "json_path": "PublicIpAddress", "width": 16 },
+        { "header": "PRIVATE IP", "json_path": "PrivateIpAddress", "width": 16 }
+      ],
+      "sub_resources": [],
+      "actions": [
+        { "key": "s", "display_name": "Start", "sdk_method": "start_instance" },
+        { "key": "S", "display_name": "Stop", "sdk_method": "stop_instance" },
+        { "key": "T", "display_name": "Terminate", "sdk_method": "terminate_instance", "needs_confirm": true }
+      ]
+    }
+  }
+}

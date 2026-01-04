@@ -1,0 +1,21 @@
+{
+  "resources": {
+    "dynamodb-tables": {
+      "display_name": "DynamoDB Tables",
+      "service": "dynamodb",
+      "sdk_method": "list_tables",
+      "sdk_method_params": {},
+      "response_path": "table_names",
+      "id_field": "TableName",
+      "name_field": "TableName",
+      "is_global": false,
+      "columns": [
+        { "header": "TABLE NAME", "json_path": "TableName", "width": 50 }
+      ],
+      "sub_resources": [],
+      "actions": [
+        { "key": "D", "display_name": "Delete Table", "sdk_method": "delete_table", "needs_confirm": true }
+      ]
+    }
+  }
+}

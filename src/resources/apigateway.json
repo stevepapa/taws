@@ -1,0 +1,22 @@
+{
+  "resources": {
+    "apigateway-rest-apis": {
+      "display_name": "API Gateway REST APIs",
+      "service": "apigateway",
+      "sdk_method": "get_rest_apis",
+      "sdk_method_params": {},
+      "response_path": "items",
+      "id_field": "id",
+      "name_field": "name",
+      "is_global": false,
+      "columns": [
+        { "header": "API NAME", "json_path": "name", "width": 30 },
+        { "header": "API ID", "json_path": "id", "width": 15 },
+        { "header": "DESCRIPTION", "json_path": "description", "width": 35 },
+        { "header": "CREATED", "json_path": "createdDate", "width": 25 }
+      ],
+      "sub_resources": [],
+      "actions": []
+    }
+  }
+}

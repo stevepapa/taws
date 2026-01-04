@@ -1,0 +1,22 @@
+{
+  "resources": {
+    "cognito-user-pools": {
+      "display_name": "Cognito User Pools",
+      "service": "cognitoidentityprovider",
+      "sdk_method": "list_user_pools",
+      "sdk_method_params": {},
+      "response_path": "user_pools",
+      "id_field": "Id",
+      "name_field": "Name",
+      "is_global": false,
+      "columns": [
+        { "header": "POOL NAME", "json_path": "Name", "width": 35 },
+        { "header": "POOL ID", "json_path": "Id", "width": 25 },
+        { "header": "STATUS", "json_path": "Status", "width": 12, "color_map": "state" },
+        { "header": "CREATED", "json_path": "CreationDate", "width": 25 }
+      ],
+      "sub_resources": [],
+      "actions": []
+    }
+  }
+}

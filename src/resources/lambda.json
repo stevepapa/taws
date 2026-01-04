@@ -1,0 +1,25 @@
+{
+  "resources": {
+    "lambda-functions": {
+      "display_name": "Lambda Functions",
+      "service": "lambda",
+      "sdk_method": "list_functions",
+      "sdk_method_params": {},
+      "response_path": "functions",
+      "id_field": "FunctionName",
+      "name_field": "FunctionName",
+      "is_global": false,
+      "columns": [
+        { "header": "FUNCTION NAME", "json_path": "FunctionName", "width": 30 },
+        { "header": "RUNTIME", "json_path": "Runtime", "width": 15 },
+        { "header": "MEMORY", "json_path": "MemorySize", "width": 10 },
+        { "header": "MODIFIED", "json_path": "LastModified", "width": 25 }
+      ],
+      "sub_resources": [],
+      "actions": [
+        { "key": "i", "display_name": "Invoke", "sdk_method": "invoke_function" },
+        { "key": "D", "display_name": "Delete", "sdk_method": "delete_function", "needs_confirm": true }
+      ]
+    }
+  }
+}

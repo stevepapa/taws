@@ -1,0 +1,69 @@
+{
+  "resources": {
+    "ecs-clusters": {
+      "display_name": "ECS Clusters",
+      "service": "ecs",
+      "sdk_method": "list_clusters_with_details",
+      "sdk_method_params": {},
+      "response_path": "clusters",
+      "id_field": "clusterArn",
+      "name_field": "clusterName",
+      "is_global": false,
+      "columns": [
+        { "header": "CLUSTER NAME", "json_path": "clusterName", "width": 25 },
+        { "header": "STATUS", "json_path": "status", "width": 10, "color_map": "state" },
+        { "header": "RUNNING TASKS", "json_path": "runningTasksCount", "width": 15 },
+        { "header": "INSTANCES", "json_path": "registeredContainerInstancesCount", "width": 12 }
+      ],
+      "sub_resources": [
+        { "shortcut": "s", "display_name": "Services", "resource_key": "ecs-services", "parent_id_field": "clusterArn", "filter_param": "cluster" },
+        { "shortcut": "t", "display_name": "Tasks", "resource_key": "ecs-tasks", "parent_id_field": "clusterArn", "filter_param": "cluster" }
+      ],
+      "actions": [
+        { "key": "D", "display_name": "Delete Cluster", "sdk_method": "delete_cluster", "needs_confirm": true }
+      ]
+    },
+    "ecs-services": {
+      "display_name": "ECS Services",
+      "service": "ecs",
+      "sdk_method": "list_services_with_details",
+      "sdk_method_params": {},
+      "response_path": "services",
+      "id_field": "serviceArn",
+      "name_field": "serviceName",
+      "is_global": false,
+      "columns": [
+        { "header": "SERVICE NAME", "json_path": "serviceName", "width": 30 },
+        { "header": "STATUS", "json_path": "status", "width": 12, "color_map": "state" },
+        { "header": "DESIRED", "json_path": "desiredCount", "width": 10 },
+        { "header": "RUNNING", "json_path": "runningCount", "width": 10 },
+        { "header": "LAUNCH TYPE", "json_path": "launchType", "width": 12 }
+      ],
+      "sub_resources": [],
+      "actions": [
+        { "key": "D", "display_name": "Delete Service", "sdk_method": "delete_service", "needs_confirm": true }
+      ]
+    },
+    "ecs-tasks": {
+      "display_name": "ECS Tasks",
+      "service": "ecs",
+      "sdk_method": "list_tasks_with_details",
+      "sdk_method_params": {},
+      "response_path": "tasks",
+      "id_field": "taskArn",
+      "name_field": "taskArn",
+      "is_global": false,
+      "columns": [
+        { "header": "TASK ID", "json_path": "taskArn", "width": 45 },
+        { "header": "STATUS", "json_path": "lastStatus", "width": 12, "color_map": "state" },
+        { "header": "DESIRED STATUS", "json_path": "desiredStatus", "width": 15 },
+        { "header": "CPU", "json_path": "cpu", "width": 8 },
+        { "header": "MEMORY", "json_path": "memory", "width": 10 }
+      ],
+      "sub_resources": [],
+      "actions": [
+        { "key": "S", "display_name": "Stop Task", "sdk_method": "stop_task", "needs_confirm": true }
+      ]
+    }
+  }
+}

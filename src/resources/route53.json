@@ -1,0 +1,22 @@
+{
+  "resources": {
+    "route53-hosted-zones": {
+      "display_name": "Route53 Hosted Zones",
+      "service": "route53",
+      "sdk_method": "list_hosted_zones",
+      "sdk_method_params": {},
+      "response_path": "hosted_zones",
+      "id_field": "Id",
+      "name_field": "Name",
+      "is_global": true,
+      "columns": [
+        { "header": "ZONE NAME", "json_path": "Name", "width": 40 },
+        { "header": "ZONE ID", "json_path": "Id", "width": 30 },
+        { "header": "TYPE", "json_path": "Config.PrivateZone", "width": 12 },
+        { "header": "RECORD COUNT", "json_path": "ResourceRecordSetCount", "width": 15 }
+      ],
+      "sub_resources": [],
+      "actions": []
+    }
+  }
+}

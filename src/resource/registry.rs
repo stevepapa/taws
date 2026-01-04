@@ -1,0 +1,284 @@
+//! Resource Registry - Load resource definitions from JSON
+//!
+//! This module loads all AWS resource definitions from resources.json
+//! and provides lookup functions for the rest of the application.
+
+use serde::Deserialize;
+use serde_json::Value;
+use std::collections::HashMap;
+use std::fs;
+use std::path::Path;
+use std::sync::OnceLock;
+
+/// Color definition from JSON
+#[derive(Debug, Clone, Deserialize)]
+pub struct ColorDef {
+    pub value: String,
+    pub color: [u8; 3],
+}
+
+/// Column definition from JSON
+#[derive(Debug, Clone, Deserialize)]
+pub struct ColumnDef {
+    pub header: String,
+    pub json_path: String,
+    pub width: u16,
+    #[serde(default)]
+    pub color_map: Option<String>,
+}
+
+/// Sub-resource definition from JSON
+#[derive(Debug, Clone, Deserialize)]
+pub struct SubResourceDef {
+    pub resource_key: String,
+    pub display_name: String,
+    pub shortcut: String,
+    pub parent_id_field: String,
+    pub filter_param: String,
+}
+
+/// Action definition from JSON
+#[derive(Debug, Clone, Deserialize)]
+pub struct ActionDef {
+    #[allow(dead_code)]
+    pub key: String,
+    #[allow(dead_code)]
+    pub display_name: String,
+    #[serde(default)]
+    #[allow(dead_code)]
+    pub shortcut: Option<String>,
+    #[allow(dead_code)]
+    pub sdk_method: String,
+    #[serde(default)]
+    #[allow(dead_code)]
+    pub id_param: Option<String>,
+    #[serde(default)]
+    #[allow(dead_code)]
+    pub needs_confirm: bool,
+}
+
+/// Resource definition from JSON
+#[derive(Debug, Clone, Deserialize)]
+pub struct ResourceDef {
+    pub display_name: String,
+    pub service: String,
+    pub sdk_method: String,
+    #[serde(default)]
+    pub sdk_method_params: Value,
+    pub response_path: String,
+    pub id_field: String,
+    pub name_field: String,
+    #[serde(default)]
+    pub is_global: bool,
+    pub columns: Vec<ColumnDef>,
+    #[serde(default)]
+    pub sub_resources: Vec<SubResourceDef>,
+    #[serde(default)]
+    pub actions: Vec<ActionDef>,
+}
+
+/// Root structure of resources/*.json
+#[derive(Debug, Clone, Deserialize)]
+pub struct ResourceConfig {
+    #[serde(default)]
+    pub color_maps: HashMap<String, Vec<ColorDef>>,
+    #[serde(default)]
+    pub resources: HashMap<String, ResourceDef>,
+}
+
+/// Global registry loaded from JSON
+static REGISTRY: OnceLock<ResourceConfig> = OnceLock::new();
+
+/// Get the resource registry (loads from JSON on first access)
+pub fn get_registry() -> &'static ResourceConfig {
+    REGISTRY.get_or_init(|| {
+        let mut final_config = ResourceConfig {
+            color_maps: HashMap::new(),
+            resources: HashMap::new(),
+        };
+
+        let resources_dir = Path::new("src/resources");
+        let entries = fs::read_dir(resources_dir)
+            .unwrap_or_else(|e| panic!("Failed to read {}: {}", resources_dir.display(), e));
+
+        let mut json_files: Vec<_> = entries
+            .filter_map(|e| e.ok())
+            .map(|e| e.path())
+            .filter(|p| p.extension().and_then(|s| s.to_str()) == Some("json"))
+            .collect();
+        json_files.sort();
+
+        for path in json_files {
+            let content = fs::read_to_string(&path)
+                .unwrap_or_else(|e| panic!("Failed to read {}: {}", path.display(), e));
+            let partial: ResourceConfig = serde_json::from_str(&content)
+                .unwrap_or_else(|e| panic!("Failed to parse {}: {}", path.display(), e));
+            final_config.color_maps.extend(partial.color_maps);
+            final_config.resources.extend(partial.resources);
+        }
+
+        final_config
+    })
+}
+
+/// Get a resource definition by key
+pub fn get_resource(key: &str) -> Option<&'static ResourceDef> {
+    get_registry().resources.get(key)
+}
+
+/// Get all resource keys (for autocomplete)
+pub fn get_all_resource_keys() -> Vec<&'static str> {
+    get_registry()
+        .resources
+        .keys()
+        .map(|s| s.as_str())
+        .collect()
+}
+
+/// Get a color map by name
+pub fn get_color_map(name: &str) -> Option<&'static Vec<ColorDef>> {
+    get_registry().color_maps.get(name)
+}
+
+/// Get color for a value based on color map name
+pub fn get_color_for_value(color_map_name: &str, value: &str) -> Option<[u8; 3]> {
+    get_color_map(color_map_name)?
+        .iter()
+        .find(|c| c.value == value)
+        .map(|c| c.color)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_registry_loads_successfully() {
+        let registry = get_registry();
+        assert!(!registry.resources.is_empty(), "Registry should have resources");
+    }
+
+    #[test]
+    fn test_ec2_instances_resource_exists() {
+        let resource = get_resource("ec2-instances");
+        assert!(resource.is_some(), "EC2 instances resource should exist");
+        
+        let resource = resource.unwrap();
+        assert_eq!(resource.display_name, "EC2 Instances");
+        assert_eq!(resource.service, "ec2");
+        assert_eq!(resource.sdk_method, "describe_instances");
+        assert!(!resource.columns.is_empty(), "EC2 instances should have columns");
+    }
+
+    #[test]
+    fn test_iam_users_resource_exists() {
+        let resource = get_resource("iam-users");
+        assert!(resource.is_some(), "IAM users resource should exist");
+        
+        let resource = resource.unwrap();
+        assert_eq!(resource.service, "iam");
+        assert!(resource.is_global, "IAM should be a global service");
+    }
+
+    #[test]
+    fn test_iam_users_has_sub_resources() {
+        let resource = get_resource("iam-users").unwrap();
+        assert!(!resource.sub_resources.is_empty(), "IAM users should have sub-resources");
+        
+        let policy_sub = resource.sub_resources.iter()
+            .find(|s| s.resource_key == "iam-user-policies");
+        assert!(policy_sub.is_some(), "IAM users should have policies sub-resource");
+    }
+
+    #[test]
+    fn test_ec2_instances_has_actions() {
+        let resource = get_resource("ec2-instances").unwrap();
+        assert!(!resource.actions.is_empty(), "EC2 instances should have actions");
+        
+        let start_action = resource.actions.iter()
+            .find(|a| a.sdk_method == "start_instance");
+        assert!(start_action.is_some(), "EC2 should have start action");
+        
+        let terminate_action = resource.actions.iter()
+            .find(|a| a.sdk_method == "terminate_instance");
+        assert!(terminate_action.is_some(), "EC2 should have terminate action");
+        assert!(terminate_action.unwrap().needs_confirm, "Terminate should require confirmation");
+    }
+
+    #[test]
+    fn test_get_all_resource_keys() {
+        let keys = get_all_resource_keys();
+        assert!(keys.len() >= 50, "Should have at least 50 resource types");
+        assert!(keys.contains(&"ec2-instances"), "Should contain ec2-instances");
+        assert!(keys.contains(&"lambda-functions"), "Should contain lambda-functions");
+        assert!(keys.contains(&"s3-buckets"), "Should contain s3-buckets");
+    }
+
+    #[test]
+    fn test_common_color_maps_exist() {
+        let state_map = get_color_map("state");
+        assert!(state_map.is_some(), "State color map should exist");
+        
+        let bool_map = get_color_map("bool");
+        assert!(bool_map.is_some(), "Bool color map should exist");
+    }
+
+    #[test]
+    fn test_get_color_for_running_state() {
+        let color = get_color_for_value("state", "running");
+        assert!(color.is_some(), "Should have color for 'running' state");
+        // Green color
+        assert_eq!(color.unwrap(), [0, 255, 0]);
+    }
+
+    #[test]
+    fn test_rds_has_sub_resources() {
+        let resource = get_resource("rds-instances").unwrap();
+        assert!(!resource.sub_resources.is_empty(), "RDS should have sub-resources");
+        
+        let snapshot_sub = resource.sub_resources.iter()
+            .find(|s| s.resource_key == "rds-snapshots");
+        assert!(snapshot_sub.is_some(), "RDS should have snapshots sub-resource");
+    }
+
+    #[test]
+    fn test_ecs_has_sub_resources() {
+        let resource = get_resource("ecs-clusters").unwrap();
+        assert!(!resource.sub_resources.is_empty(), "ECS clusters should have sub-resources");
+        
+        let services_sub = resource.sub_resources.iter()
+            .find(|s| s.resource_key == "ecs-services");
+        assert!(services_sub.is_some(), "ECS should have services sub-resource");
+        
+        let tasks_sub = resource.sub_resources.iter()
+            .find(|s| s.resource_key == "ecs-tasks");
+        assert!(tasks_sub.is_some(), "ECS should have tasks sub-resource");
+    }
+
+    #[test]
+    fn test_lambda_has_actions() {
+        let resource = get_resource("lambda-functions").unwrap();
+        assert!(!resource.actions.is_empty(), "Lambda functions should have actions");
+        
+        let invoke_action = resource.actions.iter()
+            .find(|a| a.sdk_method == "invoke_function");
+        assert!(invoke_action.is_some(), "Lambda should have invoke action");
+    }
+
+    #[test]
+    fn test_all_resources_have_required_fields() {
+        let registry = get_registry();
+        for (key, resource) in &registry.resources {
+            assert!(!resource.display_name.is_empty(), 
+                "Resource {} should have display_name", key);
+            assert!(!resource.service.is_empty(), 
+                "Resource {} should have service", key);
+            assert!(!resource.sdk_method.is_empty(), 
+                "Resource {} should have sdk_method", key);
+            assert!(!resource.id_field.is_empty(), 
+                "Resource {} should have id_field", key);
+            assert!(!resource.name_field.is_empty(), 
+                "Resource {} should have name_field", key);
+        }
+    }
+}

@@ -1,0 +1,52 @@
+{
+  "resources": {
+    "rds-instances": {
+      "display_name": "RDS Instances",
+      "service": "rds",
+      "sdk_method": "describe_db_instances",
+      "sdk_method_params": {},
+      "response_path": "db_instances",
+      "id_field": "DBInstanceIdentifier",
+      "name_field": "DBInstanceIdentifier",
+      "is_global": false,
+      "columns": [
+        { "header": "DB IDENTIFIER", "json_path": "DBInstanceIdentifier", "width": 25 },
+        { "header": "STATUS", "json_path": "DBInstanceStatus", "width": 15, "color_map": "state" },
+        { "header": "ENGINE", "json_path": "Engine", "width": 15 },
+        { "header": "CLASS", "json_path": "DBInstanceClass", "width": 15 },
+        { "header": "AZ", "json_path": "AvailabilityZone", "width": 15 }
+      ],
+      "sub_resources": [
+        { "shortcut": "n", "display_name": "Snapshots", "resource_key": "rds-snapshots", "parent_id_field": "DBInstanceIdentifier", "filter_param": "db_instance_identifier" }
+      ],
+      "actions": [
+        { "key": "s", "display_name": "Start", "sdk_method": "start_db_instance" },
+        { "key": "S", "display_name": "Stop", "sdk_method": "stop_db_instance" },
+        { "key": "r", "display_name": "Reboot", "sdk_method": "reboot_db_instance", "needs_confirm": true },
+        { "key": "D", "display_name": "Delete", "sdk_method": "delete_db_instance", "needs_confirm": true }
+      ]
+    },
+    "rds-snapshots": {
+      "display_name": "RDS Snapshots",
+      "service": "rds",
+      "sdk_method": "describe_db_snapshots",
+      "sdk_method_params": {},
+      "response_path": "db_snapshots",
+      "id_field": "DBSnapshotIdentifier",
+      "name_field": "DBSnapshotIdentifier",
+      "is_global": false,
+      "columns": [
+        { "header": "SNAPSHOT ID", "json_path": "DBSnapshotIdentifier", "width": 35 },
+        { "header": "STATUS", "json_path": "Status", "width": 12, "color_map": "state" },
+        { "header": "TYPE", "json_path": "SnapshotType", "width": 12 },
+        { "header": "ENGINE", "json_path": "Engine", "width": 12 },
+        { "header": "SIZE (GB)", "json_path": "AllocatedStorage", "width": 10 },
+        { "header": "CREATED", "json_path": "SnapshotCreateTime", "width": 20 }
+      ],
+      "sub_resources": [],
+      "actions": [
+        { "key": "D", "display_name": "Delete Snapshot", "sdk_method": "delete_db_snapshot", "needs_confirm": true }
+      ]
+    }
+  }
+}

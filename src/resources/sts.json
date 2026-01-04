@@ -1,0 +1,21 @@
+{
+  "resources": {
+    "sts-caller-identity": {
+      "display_name": "STS Caller Identity",
+      "service": "sts",
+      "sdk_method": "get_caller_identity",
+      "sdk_method_params": {},
+      "response_path": "identity",
+      "id_field": "Arn",
+      "name_field": "Arn",
+      "is_global": true,
+      "columns": [
+        { "header": "ACCOUNT", "json_path": "Account", "width": 15 },
+        { "header": "USER ID", "json_path": "UserId", "width": 25 },
+        { "header": "ARN", "json_path": "Arn", "width": 60 }
+      ],
+      "sub_resources": [],
+      "actions": []
+    }
+  }
+}

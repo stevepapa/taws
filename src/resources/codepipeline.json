@@ -1,0 +1,22 @@
+{
+  "resources": {
+    "codepipeline-pipelines": {
+      "display_name": "CodePipeline Pipelines",
+      "service": "codepipeline",
+      "sdk_method": "list_pipelines",
+      "sdk_method_params": {},
+      "response_path": "pipelines",
+      "id_field": "name",
+      "name_field": "name",
+      "is_global": false,
+      "columns": [
+        { "header": "PIPELINE NAME", "json_path": "name", "width": 35 },
+        { "header": "VERSION", "json_path": "version", "width": 10 },
+        { "header": "CREATED", "json_path": "created", "width": 25 },
+        { "header": "UPDATED", "json_path": "updated", "width": 25 }
+      ],
+      "sub_resources": [],
+      "actions": []
+    }
+  }
+}

@@ -1,0 +1,170 @@
+{
+  "resources": {
+    "iam-users": {
+      "display_name": "IAM Users",
+      "service": "iam",
+      "sdk_method": "list_users",
+      "sdk_method_params": {},
+      "response_path": "users",
+      "id_field": "UserId",
+      "name_field": "UserName",
+      "is_global": true,
+      "columns": [
+        { "header": "USER NAME", "json_path": "UserName", "width": 22 },
+        { "header": "USER ID", "json_path": "UserId", "width": 24 },
+        { "header": "ARN", "json_path": "Arn", "width": 34 },
+        { "header": "CREATED", "json_path": "CreateDate", "width": 20 }
+      ],
+      "sub_resources": [
+        { "shortcut": "p", "display_name": "Attached Policies", "resource_key": "iam-user-policies", "parent_id_field": "UserName", "filter_param": "user_name" },
+        { "shortcut": "g", "display_name": "Groups", "resource_key": "iam-user-groups", "parent_id_field": "UserName", "filter_param": "user_name" },
+        { "shortcut": "a", "display_name": "Access Keys", "resource_key": "iam-access-keys", "parent_id_field": "UserName", "filter_param": "user_name" }
+      ],
+      "actions": []
+    },
+    "iam-user-policies": {
+      "display_name": "IAM User Policies",
+      "service": "iam",
+      "sdk_method": "list_attached_user_policies",
+      "sdk_method_params": {},
+      "response_path": "attached_policies",
+      "id_field": "PolicyName",
+      "name_field": "PolicyName",
+      "is_global": true,
+      "columns": [
+        { "header": "POLICY NAME", "json_path": "PolicyName", "width": 28 },
+        { "header": "ARN", "json_path": "PolicyArn", "width": 34 }
+      ],
+      "sub_resources": [],
+      "actions": []
+    },
+    "iam-user-groups": {
+      "display_name": "IAM User Groups",
+      "service": "iam",
+      "sdk_method": "list_groups_for_user",
+      "sdk_method_params": {},
+      "response_path": "groups",
+      "id_field": "GroupId",
+      "name_field": "GroupName",
+      "is_global": true,
+      "columns": [
+        { "header": "GROUP NAME", "json_path": "GroupName", "width": 25 },
+        { "header": "GROUP ID", "json_path": "GroupId", "width": 24 },
+        { "header": "ARN", "json_path": "Arn", "width": 34 }
+      ],
+      "sub_resources": [],
+      "actions": []
+    },
+    "iam-access-keys": {
+      "display_name": "IAM Access Keys",
+      "service": "iam",
+      "sdk_method": "list_access_keys",
+      "sdk_method_params": {},
+      "response_path": "access_key_metadata",
+      "id_field": "AccessKeyId",
+      "name_field": "AccessKeyId",
+      "is_global": true,
+      "columns": [
+        { "header": "ACCESS KEY ID", "json_path": "AccessKeyId", "width": 25 },
+        { "header": "STATUS", "json_path": "Status", "width": 10, "color_map": "state" },
+        { "header": "CREATED", "json_path": "CreateDate", "width": 20 }
+      ],
+      "sub_resources": [],
+      "actions": []
+    },
+    "iam-roles": {
+      "display_name": "IAM Roles",
+      "service": "iam",
+      "sdk_method": "list_roles",
+      "sdk_method_params": {},
+      "response_path": "roles",
+      "id_field": "RoleId",
+      "name_field": "RoleName",
+      "is_global": true,
+      "columns": [
+        { "header": "ROLE NAME", "json_path": "RoleName", "width": 25 },
+        { "header": "ROLE ID", "json_path": "RoleId", "width": 24 },
+        { "header": "ARN", "json_path": "Arn", "width": 34 },
+        { "header": "CREATED", "json_path": "CreateDate", "width": 17 }
+      ],
+      "sub_resources": [
+        { "shortcut": "p", "display_name": "Attached Policies", "resource_key": "iam-role-policies", "parent_id_field": "RoleName", "filter_param": "role_name" }
+      ],
+      "actions": []
+    },
+    "iam-role-policies": {
+      "display_name": "IAM Role Policies",
+      "service": "iam",
+      "sdk_method": "list_attached_role_policies",
+      "sdk_method_params": {},
+      "response_path": "attached_policies",
+      "id_field": "PolicyName",
+      "name_field": "PolicyName",
+      "is_global": true,
+      "columns": [
+        { "header": "POLICY NAME", "json_path": "PolicyName", "width": 28 },
+        { "header": "ARN", "json_path": "PolicyArn", "width": 34 }
+      ],
+      "sub_resources": [],
+      "actions": []
+    },
+    "iam-policies": {
+      "display_name": "IAM Policies",
+      "service": "iam",
+      "sdk_method": "list_policies",
+      "sdk_method_params": {
+        "scope": "Local"
+      },
+      "response_path": "policies",
+      "id_field": "PolicyId",
+      "name_field": "PolicyName",
+      "is_global": true,
+      "columns": [
+        { "header": "POLICY NAME", "json_path": "PolicyName", "width": 28 },
+        { "header": "POLICY ID", "json_path": "PolicyId", "width": 24 },
+        { "header": "ATTACHMENTS", "json_path": "AttachmentCount", "width": 14 },
+        { "header": "ATTACHABLE", "json_path": "IsAttachable", "width": 12, "color_map": "bool" },
+        { "header": "CREATED", "json_path": "CreateDate", "width": 17 }
+      ],
+      "sub_resources": [],
+      "actions": []
+    },
+    "iam-groups": {
+      "display_name": "IAM Groups",
+      "service": "iam",
+      "sdk_method": "list_groups",
+      "sdk_method_params": {},
+      "response_path": "groups",
+      "id_field": "GroupId",
+      "name_field": "GroupName",
+      "is_global": true,
+      "columns": [
+        { "header": "GROUP NAME", "json_path": "GroupName", "width": 25 },
+        { "header": "GROUP ID", "json_path": "GroupId", "width": 24 },
+        { "header": "ARN", "json_path": "Arn", "width": 34 },
+        { "header": "CREATED", "json_path": "CreateDate", "width": 17 }
+      ],
+      "sub_resources": [
+        { "shortcut": "u", "display_name": "Users in Group", "resource_key": "iam-group-users", "parent_id_field": "GroupName", "filter_param": "group_name" }
+      ],
+      "actions": []
+    },
+    "iam-group-users": {
+      "display_name": "IAM Group Users",
+      "service": "iam",
+      "sdk_method": "get_group",
+      "sdk_method_params": {},
+      "response_path": "users",
+      "id_field": "UserId",
+      "name_field": "UserName",
+      "is_global": true,
+      "columns": [
+        { "header": "USER NAME", "json_path": "UserName", "width": 22 },
+        { "header": "USER ID", "json_path": "UserId", "width": 24 },
+        { "header": "ARN", "json_path": "Arn", "width": 34 }
+      ],
+      "sub_resources": [],
+      "actions": []
+    }
+  }
+}
