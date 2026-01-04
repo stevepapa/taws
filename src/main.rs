@@ -56,7 +56,10 @@ async fn main() -> Result<()> {
     Ok(())
 }
 
-fn cleanup_terminal<B: Backend + std::io::Write>(terminal: &mut Terminal<B>) -> Result<()> {
+fn cleanup_terminal<B: Backend + std::io::Write>(terminal: &mut Terminal<B>) -> Result<()>
+where
+    B::Error: Send + Sync + 'static,
+{
     disable_raw_mode()?;
     execute!(
         terminal.backend_mut(),
@@ -67,7 +70,10 @@ fn cleanup_terminal<B: Backend + std::io::Write>(terminal: &mut Terminal<B>) -> 
     Ok(())
 }
 
-async fn initialize_with_splash<B: Backend>(terminal: &mut Terminal<B>) -> Result<Option<App>> {
+async fn initialize_with_splash<B: Backend>(terminal: &mut Terminal<B>) -> Result<Option<App>>
+where
+    B::Error: Send + Sync + 'static,
+{
     let mut splash = SplashState::new();
 
     // Render initial splash
@@ -166,7 +172,10 @@ fn check_abort() -> Result<bool> {
     Ok(false)
 }
 
-async fn run_app<B: Backend>(terminal: &mut Terminal<B>, app: &mut App) -> Result<()> {
+async fn run_app<B: Backend>(terminal: &mut Terminal<B>, app: &mut App) -> Result<()>
+where
+    B::Error: Send + Sync + 'static,
+{
     loop {
         terminal.draw(|f| ui::render(f, app))?;
 
