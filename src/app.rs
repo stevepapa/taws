@@ -4,7 +4,7 @@ use crate::config::Config;
 use crossterm::event::KeyCode;
 use crate::resource::{
     get_resource, get_all_resource_keys, ResourceDef, ResourceFilter, 
-    fetch_resources, extract_json_value,
+    fetch_resources_paginated, extract_json_value,
 };
 use anyhow::Result;
 use serde_json::Value;
@@ -117,6 +117,33 @@ pub struct App {
     
     // SSO login state
     pub sso_state: Option<SsoLoginState>,
+    
+    // Pagination state
+    pub pagination: PaginationState,
+}
+
+/// Pagination state for resource listings
+#[derive(Debug, Clone)]
+pub struct PaginationState {
+    /// Token for fetching next page (None if no more pages)
+    pub next_token: Option<String>,
+    /// Stack of previous page tokens for going back
+    pub token_stack: Vec<Option<String>>,
+    /// Current page number (1-indexed for display)
+    pub current_page: usize,
+    /// Whether there are more pages available
+    pub has_more: bool,
+}
+
+impl Default for PaginationState {
+    fn default() -> Self {
+        Self {
+            next_token: None,
+            token_stack: Vec::new(),
+            current_page: 1,
+            has_more: false,
+        }
+    }
 }
 
 /// SSO Login dialog state
@@ -207,6 +234,7 @@ impl App {
             warning_message: None,
             endpoint_url,
             sso_state: None,
+            pagination: PaginationState::default(),
         }
     }
     
@@ -256,8 +284,14 @@ impl App {
     // Data Fetching
     // =========================================================================
 
-    /// Fetch data for current resource
+    /// Fetch data for current resource (first page or current page based on pagination state)
     pub async fn refresh_current(&mut self) -> Result<()> {
+        // Fetch the current page (uses pagination.next_token if set by next_page/prev_page)
+        self.fetch_page(self.pagination.next_token.clone()).await
+    }
+    
+    /// Fetch a specific page of resources
+    async fn fetch_page(&mut self, page_token: Option<String>) -> Result<()> {
         if self.current_resource().is_none() {
             self.error_message = Some(format!("Unknown resource: {}", self.current_resource_key));
             return Ok(());
@@ -269,16 +303,28 @@ impl App {
         // Build filters from parent context
         let filters = self.build_filters_from_context();
         
-        // Use the new generic fetch_resources function
-        match fetch_resources(&self.current_resource_key, &self.clients, &filters).await {
-            Ok(items) => {
+        // Use paginated fetch - returns only one page of results
+        match fetch_resources_paginated(
+            &self.current_resource_key, 
+            &self.clients, 
+            &filters,
+            page_token.as_deref(),
+        ).await {
+            Ok(result) => {
                 // Preserve selection if possible
                 let prev_selected = self.selected;
-                self.items = items;
+                self.items = result.items;
                 self.apply_filter();
+                
+                // Update pagination state
+                self.pagination.has_more = result.next_token.is_some();
+                self.pagination.next_token = result.next_token;
+                
                 // Try to keep the same selection index
                 if prev_selected < self.filtered_items.len() {
                     self.selected = prev_selected;
+                } else {
+                    self.selected = 0;
                 }
             }
             Err(e) => {
@@ -287,12 +333,48 @@ impl App {
                 self.items.clear();
                 self.filtered_items.clear();
                 self.selected = 0;
+                self.pagination = PaginationState::default();
             }
         }
         
         self.loading = false;
         self.mark_refreshed();
         Ok(())
+    }
+    
+    /// Fetch next page of resources
+    pub async fn next_page(&mut self) -> Result<()> {
+        if !self.pagination.has_more {
+            return Ok(());
+        }
+        
+        // Save current token to stack for going back
+        let current_token = self.pagination.next_token.clone();
+        self.pagination.token_stack.push(current_token.clone());
+        self.pagination.current_page += 1;
+        
+        // Fetch next page
+        self.fetch_page(current_token).await
+    }
+    
+    /// Fetch previous page of resources
+    pub async fn prev_page(&mut self) -> Result<()> {
+        if self.pagination.current_page <= 1 {
+            return Ok(());
+        }
+        
+        // Pop the previous token from stack
+        self.pagination.token_stack.pop(); // Remove current page's token
+        let prev_token = self.pagination.token_stack.pop().flatten(); // Get previous page's token
+        self.pagination.current_page -= 1;
+        
+        // Fetch previous page
+        self.fetch_page(prev_token).await
+    }
+    
+    /// Reset pagination state (call when navigating to new resource)
+    pub fn reset_pagination(&mut self) {
+        self.pagination = PaginationState::default();
     }
 
     /// Build AWS filters from parent context
@@ -764,6 +846,9 @@ impl App {
         self.filter_active = false;
         self.mode = Mode::Normal;
         
+        // Reset pagination for new resource
+        self.reset_pagination();
+        
         self.refresh_current().await?;
         Ok(())
     }
@@ -828,6 +913,9 @@ impl App {
         self.filter_text.clear();
         self.filter_active = false;
         
+        // Reset pagination for new resource
+        self.reset_pagination();
+        
         self.refresh_current().await?;
         Ok(())
     }
@@ -843,6 +931,9 @@ impl App {
             self.selected = 0;
             self.filter_text.clear();
             self.filter_active = false;
+            
+            // Reset pagination for parent resource
+            self.reset_pagination();
             
             self.refresh_current().await?;
         }

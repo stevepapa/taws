@@ -110,24 +110,41 @@ fn render_dynamic_table(f: &mut Frame, app: &App, area: Rect) {
         return;
     };
 
-    // Build title with count and region info
+    // Build title with count, region info, and pagination
     let title = {
         let count = app.filtered_items.len();
         let total = app.items.len();
         let is_global = resource.is_global;
 
+        // Build pagination indicator
+        let page_info = if app.pagination.has_more || app.pagination.current_page > 1 {
+            format!(
+                " pg.{}{}",
+                app.pagination.current_page,
+                if app.pagination.has_more { "+" } else { "" }
+            )
+        } else {
+            String::new()
+        };
+
         if is_global {
             if app.filter_text.is_empty() {
-                format!(" {}[{}] ", resource.display_name, count)
+                format!(" {}[{}]{} ", resource.display_name, count, page_info)
             } else {
-                format!(" {}[{}/{}] ", resource.display_name, count, total)
+                format!(
+                    " {}[{}/{}]{} ",
+                    resource.display_name, count, total, page_info
+                )
             }
         } else if app.filter_text.is_empty() {
-            format!(" {}({})[{}] ", resource.display_name, app.region, count)
+            format!(
+                " {}({})[{}]{} ",
+                resource.display_name, app.region, count, page_info
+            )
         } else {
             format!(
-                " {}({})[{}/{}] ",
-                resource.display_name, app.region, count, total
+                " {}({})[{}/{}]{} ",
+                resource.display_name, app.region, count, total, page_info
             )
         }
     };
@@ -412,6 +429,20 @@ fn render_crumb(f: &mut Frame, app: &App, area: Rect) {
         String::new()
     };
 
+    // Build pagination hint
+    let pagination_hint = if app.pagination.has_more || app.pagination.current_page > 1 {
+        let mut hints = Vec::new();
+        if app.pagination.current_page > 1 {
+            hints.push("[:prev");
+        }
+        if app.pagination.has_more {
+            hints.push("]:next");
+        }
+        format!(" | {}", hints.join(" "))
+    } else {
+        String::new()
+    };
+
     let status_text = if let Some(err) = &app.error_message {
         format!("Error: {}", err)
     } else if app.loading {
@@ -421,7 +452,7 @@ fn render_crumb(f: &mut Frame, app: &App, area: Rect) {
     } else if app.filter_active {
         "Type to filter | Enter: apply | Esc: clear".to_string()
     } else {
-        shortcuts_hint
+        format!("{}{}", shortcuts_hint, pagination_hint)
     };
 
     let style = if app.error_message.is_some() {
