@@ -1260,7 +1260,15 @@ pub async fn invoke_sdk(
         // Secrets Manager Operations (JSON protocol)
         // =====================================================================
         ("secretsmanager", "list_secrets") => {
-            let response = clients.http.json_request("secretsmanager", "ListSecrets", "{}").await?;
+            // Build request with pagination support
+            let page_token = params.get("_page_token").and_then(|v| v.as_str());
+            let request_body = if let Some(token) = page_token {
+                json!({ "NextToken": token, "MaxResults": 100 }).to_string()
+            } else {
+                json!({ "MaxResults": 100 }).to_string()
+            };
+            
+            let response = clients.http.json_request("secretsmanager", "ListSecrets", &request_body).await?;
             let json: Value = serde_json::from_str(&response)?;
             
             let secrets = json.get("SecretList").and_then(|v| v.as_array()).cloned().unwrap_or_default();
@@ -1274,14 +1282,29 @@ pub async fn invoke_sdk(
                 })
             }).collect();
             
-            Ok(json!({ "secrets": result }))
+            // Include next_token in response for pagination
+            let next_token = json.get("NextToken").and_then(|v| v.as_str());
+            let mut response = json!({ "secrets": result });
+            if let Some(token) = next_token {
+                response["_next_token"] = json!(token);
+            }
+            
+            Ok(response)
         }
 
         // =====================================================================
         // SSM Operations (JSON protocol)
         // =====================================================================
         ("ssm", "describe_parameters") => {
-            let response = clients.http.json_request("ssm", "DescribeParameters", "{}").await?;
+            // Build request with pagination support
+            let page_token = params.get("_page_token").and_then(|v| v.as_str());
+            let request_body = if let Some(token) = page_token {
+                json!({ "NextToken": token, "MaxResults": 50 }).to_string()
+            } else {
+                json!({ "MaxResults": 50 }).to_string()
+            };
+            
+            let response = clients.http.json_request("ssm", "DescribeParameters", &request_body).await?;
             let json: Value = serde_json::from_str(&response)?;
             
             let parameters = json.get("Parameters").and_then(|v| v.as_array()).cloned().unwrap_or_default();
@@ -1295,7 +1318,14 @@ pub async fn invoke_sdk(
                 })
             }).collect();
             
-            Ok(json!({ "parameters": result }))
+            // Include next_token in response for pagination
+            let next_token = json.get("NextToken").and_then(|v| v.as_str());
+            let mut response = json!({ "parameters": result });
+            if let Some(token) = next_token {
+                response["_next_token"] = json!(token);
+            }
+            
+            Ok(response)
         }
 
         // =====================================================================

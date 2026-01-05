@@ -25,6 +25,13 @@ impl ResourceFilter {
     }
 }
 
+/// Result from paginated fetch including items and next page token
+#[derive(Debug, Clone)]
+pub struct PaginatedResult {
+    pub items: Vec<Value>,
+    pub next_token: Option<String>,
+}
+
 /// Fetch resources using the JSON-driven configuration
 ///
 /// This is the SINGLE entry point for fetching any AWS resource.
@@ -74,7 +81,58 @@ pub async fn fetch_resources(
     Ok(items)
 }
 
+/// Fetch resources with pagination support
+/// 
+/// Returns items for the current page and the next_token for fetching more
+pub async fn fetch_resources_paginated(
+    resource_key: &str,
+    clients: &AwsClients,
+    filters: &[ResourceFilter],
+    page_token: Option<&str>,
+) -> Result<PaginatedResult> {
+    // 1. Look up resource definition from JSON
+    let resource_def = get_resource(resource_key)
+        .ok_or_else(|| anyhow!("Unknown resource: {}", resource_key))?;
 
+    // 2. Build params (merge default params with filters)
+    let mut params = resource_def.sdk_method_params.clone();
+    
+    // Add filters to params if any
+    if !filters.is_empty() {
+        if let Value::Object(ref mut map) = params {
+            for filter in filters {
+                map.insert(filter.name.clone(), Value::Array(
+                    filter.values.iter().map(|v| Value::String(v.clone())).collect()
+                ));
+            }
+        }
+    }
+    
+    // Add pagination token if provided
+    if let Some(token) = page_token {
+        if let Value::Object(ref mut map) = params {
+            map.insert("_page_token".to_string(), Value::String(token.to_string()));
+        }
+    }
+
+    // 3. Call SDK dispatcher
+    let response = invoke_sdk(
+        &resource_def.service,
+        &resource_def.sdk_method,
+        clients,
+        &params,
+    ).await?;
+
+    // 4. Extract items using response_path
+    let items = extract_items(&response, &resource_def.response_path)?;
+    
+    // 5. Extract next_token from response (if present)
+    let next_token = response.get("_next_token")
+        .and_then(|v| v.as_str())
+        .map(|s| s.to_string());
+
+    Ok(PaginatedResult { items, next_token })
+}
 
 /// Extract items array from response using the response_path
 fn extract_items(response: &Value, path: &str) -> Result<Vec<Value>> {

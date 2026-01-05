@@ -21,6 +21,8 @@ pub fn render(f: &mut Frame, _app: &App) {
         create_key_line("G / End", "Go to bottom"),
         create_key_line("Ctrl+d", "Page down"),
         create_key_line("Ctrl+u", "Page up"),
+        create_key_line("]", "Next page (load more)"),
+        create_key_line("[", "Previous page"),
         Line::from(""),
         create_section("Views"),
         create_key_line("d / Enter", "Show details panel"),

@@ -139,6 +139,18 @@ async fn handle_normal_mode(app: &mut App, key: KeyEvent) -> Result<bool> {
             app.toggle_filter();
         }
 
+        // Pagination - next/previous page of results (using ] and [ to avoid conflicts with sub-resource shortcuts)
+        KeyCode::Char(']') => {
+            if app.pagination.has_more {
+                app.next_page().await?;
+            }
+        }
+        KeyCode::Char('[') => {
+            if app.pagination.current_page > 1 {
+                app.prev_page().await?;
+            }
+        }
+
         // Mode switches
         KeyCode::Char(':') => app.enter_command_mode(),
         KeyCode::Char('?') => app.enter_help_mode(),
