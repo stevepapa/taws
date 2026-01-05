@@ -3,13 +3,16 @@
 //! Supports:
 //! - Environment variables (AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, AWS_SESSION_TOKEN)
 //! - AWS profiles (~/.aws/credentials and ~/.aws/config)
-//! - IMDSv2 (EC2 instance metadata) - TODO
+//! - IMDSv2 (EC2 instance metadata)
 
 use anyhow::{anyhow, Result};
 use std::collections::HashMap;
 use std::env;
 use std::fs;
 use std::path::PathBuf;
+use std::sync::OnceLock;
+use std::time::{Duration, Instant};
+use tracing::{debug, trace};
 
 /// AWS credentials
 #[derive(Debug, Clone)]
@@ -19,23 +22,63 @@ pub struct Credentials {
     pub session_token: Option<String>,
 }
 
+/// Cached IMDS credentials with expiration
+struct CachedImdsCredentials {
+    credentials: Credentials,
+    expiration: Instant,
+}
+
+/// Global cache for IMDS credentials
+static IMDS_CACHE: OnceLock<std::sync::Mutex<Option<CachedImdsCredentials>>> = OnceLock::new();
+
+/// IMDSv2 metadata endpoint
+const IMDS_ENDPOINT: &str = "http://169.254.169.254";
+/// IMDSv2 token TTL in seconds (6 hours)
+const IMDS_TOKEN_TTL: u64 = 21600;
+/// Timeout for IMDS requests (2 seconds - fast fail if not on EC2)
+const IMDS_TIMEOUT: Duration = Duration::from_secs(2);
+/// Refresh credentials 5 minutes before expiration
+const IMDS_REFRESH_BUFFER: Duration = Duration::from_secs(300);
+
 /// Load credentials for a given profile
 pub fn load_credentials(profile: &str) -> Result<Credentials> {
     // 1. Try environment variables first (if default profile or explicitly set)
     if profile == "default" {
         if let Ok(creds) = load_from_env() {
+            debug!("Loaded credentials from environment variables");
             return Ok(creds);
         }
     }
 
     // 2. Try AWS credentials file
     if let Ok(creds) = load_from_credentials_file(profile) {
+        debug!(
+            "Loaded credentials from credentials file for profile '{}'",
+            profile
+        );
         return Ok(creds);
     }
 
     // 3. Try config file with credential_source or role
     if let Ok(creds) = load_from_config_file(profile) {
+        debug!(
+            "Loaded credentials from config file for profile '{}'",
+            profile
+        );
         return Ok(creds);
+    }
+
+    // 4. Try IMDSv2 (EC2 instance metadata) - only for default profile
+    if profile == "default" {
+        match load_from_imds() {
+            Ok(creds) => {
+                debug!("Loaded credentials from EC2 instance metadata (IMDSv2)");
+                return Ok(creds);
+            }
+            Err(e) => {
+                debug!("IMDSv2 credential loading failed: {}", e);
+            }
+        }
     }
 
     Err(anyhow!(
@@ -225,4 +268,215 @@ pub fn list_profiles() -> Vec<String> {
 
     profiles.sort();
     profiles
+}
+
+// =============================================================================
+// IMDSv2 (EC2 Instance Metadata Service) Support
+// =============================================================================
+
+/// Load credentials from EC2 Instance Metadata Service (IMDSv2)
+///
+/// This function:
+/// 1. Checks if we have valid cached credentials
+/// 2. If not, fetches a session token from IMDSv2
+/// 3. Uses the token to get the IAM role name
+/// 4. Fetches temporary credentials for that role
+/// 5. Caches the credentials until near expiration
+fn load_from_imds() -> Result<Credentials> {
+    // Check cache first
+    let cache = IMDS_CACHE.get_or_init(|| std::sync::Mutex::new(None));
+
+    if let Ok(guard) = cache.lock() {
+        if let Some(ref cached) = *guard {
+            // Return cached credentials if not expired (with buffer)
+            if cached.expiration > Instant::now() + IMDS_REFRESH_BUFFER {
+                trace!("Using cached IMDS credentials");
+                return Ok(cached.credentials.clone());
+            }
+        }
+    }
+
+    // Fetch fresh credentials
+    let creds = fetch_imds_credentials()?;
+
+    Ok(creds)
+}
+
+/// Fetch credentials from IMDSv2 endpoint
+fn fetch_imds_credentials() -> Result<Credentials> {
+    // Use a blocking HTTP client with short timeout
+    let client = reqwest::blocking::Client::builder()
+        .timeout(IMDS_TIMEOUT)
+        .connect_timeout(IMDS_TIMEOUT)
+        .build()
+        .map_err(|e| anyhow!("Failed to create HTTP client: {}", e))?;
+
+    // Step 1: Get IMDSv2 session token
+    trace!("Fetching IMDSv2 session token");
+    let token_url = format!("{}/latest/api/token", IMDS_ENDPOINT);
+    let token_response = client
+        .put(&token_url)
+        .header(
+            "X-aws-ec2-metadata-token-ttl-seconds",
+            IMDS_TOKEN_TTL.to_string(),
+        )
+        .send()
+        .map_err(|e| anyhow!("Failed to get IMDS token (not running on EC2?): {}", e))?;
+
+    if !token_response.status().is_success() {
+        return Err(anyhow!(
+            "IMDS token request failed with status: {}",
+            token_response.status()
+        ));
+    }
+
+    let token = token_response
+        .text()
+        .map_err(|e| anyhow!("Failed to read IMDS token: {}", e))?;
+
+    // Step 2: Get IAM role name
+    trace!("Fetching IAM role name from IMDS");
+    let role_url = format!(
+        "{}/latest/meta-data/iam/security-credentials/",
+        IMDS_ENDPOINT
+    );
+    let role_response = client
+        .get(&role_url)
+        .header("X-aws-ec2-metadata-token", &token)
+        .send()
+        .map_err(|e| anyhow!("Failed to get IAM role: {}", e))?;
+
+    if !role_response.status().is_success() {
+        return Err(anyhow!(
+            "No IAM role attached to this EC2 instance (status: {})",
+            role_response.status()
+        ));
+    }
+
+    let role_text = role_response
+        .text()
+        .map_err(|e| anyhow!("Failed to read IAM role name: {}", e))?;
+
+    // Take the first role if multiple are returned (newline-separated)
+    let role_name = role_text
+        .lines()
+        .next()
+        .map(|s| s.trim())
+        .filter(|s| !s.is_empty())
+        .ok_or_else(|| anyhow!("No IAM role attached to this EC2 instance"))?
+        .to_string();
+
+    debug!("Found IAM role: {}", role_name);
+
+    // Step 3: Get credentials for the role
+    trace!("Fetching credentials for IAM role: {}", role_name);
+    let creds_url = format!(
+        "{}/latest/meta-data/iam/security-credentials/{}",
+        IMDS_ENDPOINT, role_name
+    );
+    let creds_response = client
+        .get(&creds_url)
+        .header("X-aws-ec2-metadata-token", &token)
+        .send()
+        .map_err(|e| anyhow!("Failed to get credentials: {}", e))?;
+
+    if !creds_response.status().is_success() {
+        return Err(anyhow!(
+            "Failed to get credentials for role '{}' (status: {})",
+            role_name,
+            creds_response.status()
+        ));
+    }
+
+    let creds_json: serde_json::Value = creds_response
+        .json()
+        .map_err(|e| anyhow!("Failed to parse credentials JSON: {}", e))?;
+
+    // Parse the credentials
+    let access_key_id = creds_json
+        .get("AccessKeyId")
+        .and_then(|v| v.as_str())
+        .ok_or_else(|| anyhow!("AccessKeyId not found in IMDS response"))?
+        .to_string();
+
+    let secret_access_key = creds_json
+        .get("SecretAccessKey")
+        .and_then(|v| v.as_str())
+        .ok_or_else(|| anyhow!("SecretAccessKey not found in IMDS response"))?
+        .to_string();
+
+    let session_token = creds_json
+        .get("Token")
+        .and_then(|v| v.as_str())
+        .map(|s| s.to_string());
+
+    // Parse expiration time
+    let expiration = if let Some(exp_str) = creds_json.get("Expiration").and_then(|v| v.as_str()) {
+        // Parse ISO 8601 format: "2024-01-15T12:00:00Z"
+        parse_expiration(exp_str).unwrap_or_else(|| {
+            // Default to 1 hour if parsing fails
+            Instant::now() + Duration::from_secs(3600)
+        })
+    } else {
+        // Default to 1 hour if no expiration provided
+        Instant::now() + Duration::from_secs(3600)
+    };
+
+    let credentials = Credentials {
+        access_key_id,
+        secret_access_key,
+        session_token,
+    };
+
+    // Cache the credentials
+    let cache = IMDS_CACHE.get_or_init(|| std::sync::Mutex::new(None));
+    if let Ok(mut guard) = cache.lock() {
+        *guard = Some(CachedImdsCredentials {
+            credentials: credentials.clone(),
+            expiration,
+        });
+        debug!(
+            "Cached IMDS credentials, expires in {:?}",
+            expiration - Instant::now()
+        );
+    }
+
+    Ok(credentials)
+}
+
+/// Parse ISO 8601 expiration time to Instant
+fn parse_expiration(exp_str: &str) -> Option<Instant> {
+    // Parse "2024-01-15T12:00:00Z" format
+    use chrono::{DateTime, Utc};
+
+    let expiration_time: DateTime<Utc> = exp_str.parse().ok()?;
+    let now = Utc::now();
+
+    if expiration_time <= now {
+        return None;
+    }
+
+    let duration_until_expiration = (expiration_time - now).to_std().ok()?;
+    Some(Instant::now() + duration_until_expiration)
+}
+
+/// Check if IMDS is available (useful for detecting EC2 environment)
+#[allow(dead_code)]
+pub fn is_imds_available() -> bool {
+    let client = match reqwest::blocking::Client::builder()
+        .timeout(IMDS_TIMEOUT)
+        .connect_timeout(IMDS_TIMEOUT)
+        .build()
+    {
+        Ok(c) => c,
+        Err(_) => return false,
+    };
+
+    let token_url = format!("{}/latest/api/token", IMDS_ENDPOINT);
+    client
+        .put(&token_url)
+        .header("X-aws-ec2-metadata-token-ttl-seconds", "21600")
+        .send()
+        .map(|r| r.status().is_success())
+        .unwrap_or(false)
 }
