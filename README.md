@@ -130,7 +130,18 @@ taws --profile production
 
 # Launch in a specific region
 taws --region us-west-2
+
+# Enable debug logging
+taws --log-level debug
 ```
+
+### Log File Locations
+
+| Platform | Path |
+|----------|------|
+| **Linux** | `~/.config/taws/taws.log` |
+| **macOS** | `~/Library/Application Support/taws/taws.log` |
+| **Windows** | `%APPDATA%\taws\taws.log` |
 
 ---
 

@@ -41,7 +41,7 @@ struct Args {
     #[arg(short, long)]
     region: Option<String>,
 
-    /// Log level for debugging (logs to ~/.config/taws/taws.log)
+    /// Log level for debugging (logs to platform config dir: Linux ~/.config/taws/taws.log, macOS ~/Library/Application Support/taws/taws.log, Windows %APPDATA%/taws/taws.log)
     #[arg(long, value_enum, default_value = "off")]
     log_level: LogLevel,
 }
