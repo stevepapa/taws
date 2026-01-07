@@ -197,9 +197,7 @@ AWS_ENDPOINT_URL=http://localhost:4566 taws
 | **Navigation** | | |
 | Move up | `k` / `↑` | Move selection up |
 | Move down | `j` / `↓` | Move selection down |
-| Half page up | `Ctrl-u` | Move up by half page |
-| Half page down | `Ctrl-d` | Move down by half page |
-| Top | `g` | Jump to first item |
+| Top | `gg` | Jump to first item |
 | Bottom | `G` | Jump to last item |
 | **Pagination** | | |
 | Next page | `]` | Load next page of results |
@@ -207,13 +205,13 @@ AWS_ENDPOINT_URL=http://localhost:4566 taws
 | **Views** | | |
 | Resource picker | `:` | Open resource type selector |
 | Describe | `Enter` / `d` | View resource details |
-| Back | `Esc` | Go back to previous view |
+| Back | `Esc` / `Backspace` | Go back to previous view |
 | Help | `?` | Show help screen |
 | **Actions** | | |
 | Refresh | `R` | Refresh current view (resets pagination) |
 | Filter | `/` | Filter resources |
 | Region shortcuts | `0-5` | Quick switch to common regions |
-| Quit | `q` / `Ctrl-c` | Exit taws |
+| Quit | `Ctrl-c` | Exit taws |
 | **EC2 Actions** | | |
 | Start instance | `s` | Start selected EC2 instance |
 | Stop instance | `S` | Stop selected EC2 instance |
